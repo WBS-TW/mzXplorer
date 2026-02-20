@@ -13,7 +13,7 @@ library(enviPat); data("isotopes")
 library(vroom)
 library(igraph)
 
-source("utils.R")
+source("playground_utils2.R")
 
 ###########  UI  ###########
 
@@ -133,7 +133,7 @@ ui <- shiny::navbarPage(
                 shiny::fluidPage(
                         shiny::titlePanel("How to use mzXplorer"),
                         shiny::br(),
-                        shiny::includeMarkdown("./instructions.md")
+                        shiny::includeMarkdown("./playground_instructions.md")
                 )
         )
 )

@@ -1,127 +1,120 @@
+
 ###########  Mass defect helpers ###########
 
-getmdh <- function(mz, cus = c("CH2,H2"), method = "round") {
+getmdh <- function(mz, cus = c("CH2,H2"), method = "round"){
         getorder <- function(input) {
                 if (grepl(',', input)) unlist(strsplit(input, ',')) else input
         }
         temp <- getorder(cus)
-        cus  <- NULL
+        cus <- NULL
         for (i in 1:length(temp)) cus <- c(cus, getmass(temp[i]))
         
         if (length(cus) == 2) {
-                omd  <- mz * round(cus[1]) / cus[1]
+                omd <- mz * round(cus[1]) / cus[1]
                 sumd <- cus[2] * round(cus[1]) / cus[1]
                 if (method == 'round') {
                         MD1 <- round(round(omd) - omd, digits = 6)
                         md2 <- round(round(sumd) - sumd, digits = 6)
                         smd <- MD1 / md2
                         MD2 <- round(round(smd) - smd, digits = 6)
-                        re  <- cbind.data.frame(mz, MD1, MD2)
+                        re <- cbind.data.frame(mz, MD1, MD2)
                 } else if (method == 'floor') {
                         MD1 <- round(floor(omd) - omd, digits = 6)
                         md2 <- round(floor(sumd) - sumd, digits = 6)
                         smd <- MD1 / md2
                         MD2 <- round(floor(smd) - smd, digits = 6)
-                        re  <- cbind.data.frame(mz, MD1, MD2)
+                        re <- cbind.data.frame(mz, MD1, MD2)
                 } else {
                         MD1 <- round(ceiling(omd) - omd, digits = 6)
                         md2 <- round(ceiling(sumd) - sumd, digits = 6)
                         smd <- MD1 / md2
                         MD2 <- round(ceiling(smd) - smd, digits = 6)
-                        re  <- cbind.data.frame(mz, MD1, MD2)
+                        re <- cbind.data.frame(mz, MD1, MD2)
                 }
-                
         } else if (length(cus) == 3) {
-                
-                omd  <- mz * round(cus[1]) / cus[1]
+                omd <- mz * round(cus[1]) / cus[1]
                 sumd <- cus[2] * round(cus[1]) / cus[1]
                 tumd <- cus[3] * round(cus[1]) / cus[1]
-                
                 if (method == 'round') {
                         MD1 <- round(round(omd) - omd, digits = 6)
                         md2 <- round(round(sumd) - sumd, digits = 6)
                         md3 <- round(round(tumd) - tumd, digits = 6)
-                        smd  <- MD1 / md2; tsmd <- md3 / md2
+                        smd <- MD1 / md2; tsmd <- md3 / md2
                         MD2 <- round(round(smd) - smd, digits = 6)
                         md3 <- round(round(tsmd) - tsmd, digits = 6)
                         tmd <- MD2 / md3
                         MD3 <- round(round(tmd) - tmd, digits = 6)
-                        re  <- cbind.data.frame(mz, MD1, MD2, MD3)
+                        re <- cbind.data.frame(mz, MD1, MD2, MD3)
                 } else if (method == 'floor') {
                         MD1 <- round(floor(omd) - omd, digits = 6)
                         md2 <- round(floor(sumd) - sumd, digits = 6)
                         md3 <- round(floor(tumd) - tumd, digits = 6)
-                        smd  <- MD1 / md2; tsmd <- md3 / md2
+                        smd <- MD1 / md2; tsmd <- md3 / md2
                         MD2 <- round(floor(smd) - smd, digits = 6)
                         md3 <- round(floor(tsmd) - tsmd, digits = 6)
                         tmd <- MD2 / md3
                         MD3 <- round(floor(tmd) - tmd, digits = 6)
-                        re  <- cbind.data.frame(mz, MD1, MD2, MD3)
+                        re <- cbind.data.frame(mz, MD1, MD2, MD3)
                 } else {
                         MD1 <- round(ceiling(omd) - omd, digits = 6)
                         md2 <- round(ceiling(sumd) - sumd, digits = 6)
                         md3 <- round(ceiling(tumd) - tumd, digits = 6)
-                        smd  <- MD1 / md2; tsmd <- md3 / md2
+                        smd <- MD1 / md2; tsmd <- md3 / md2
                         MD2 <- round(ceiling(smd) - smd, digits = 6)
                         md3 <- round(ceiling(tsmd) - tsmd, digits = 6)
                         tmd <- MD2 / md3
                         MD3 <- round(ceiling(tmd) - tmd, digits = 6)
-                        re  <- cbind.data.frame(mz, MD1, MD2, MD3)
+                        re <- cbind.data.frame(mz, MD1, MD2, MD3)
                 }
-                
         } else if (length(cus) > 3) {
-                
                 message("Sorry, only three MD base units are allowed!")
-                omd  <- mz * round(cus[1]) / cus[1]
+                omd <- mz * round(cus[1]) / cus[1]
                 sumd <- cus[2] * round(cus[1]) / cus[1]
                 tumd <- cus[3] * round(cus[1]) / cus[1]
-                
                 if (method == 'round') {
                         MD1 <- round(round(omd) - omd, digits = 6)
                         md2 <- round(round(sumd) - sumd, digits = 6)
                         md3 <- round(round(tumd) - tumd, digits = 6)
-                        smd  <- MD1 / md2; tsmd <- md3 / md2
+                        smd <- MD1 / md2; tsmd <- md3 / md2
                         MD2 <- round(round(smd) - smd, digits = 6)
                         md3 <- round(round(tsmd) - tsmd, digits = 6)
                         tmd <- MD2 / md3
                         MD3 <- round(round(tmd) - tmd, digits = 6)
-                        re  <- cbind.data.frame(mz, MD1, MD2, MD3)
+                        re <- cbind.data.frame(mz, MD1, MD2, MD3)
                 } else if (method == 'floor') {
                         MD1 <- round(floor(omd) - omd, digits = 6)
                         md2 <- round(floor(sumd) - sumd, digits = 6)
                         md3 <- round(floor(tumd) - tumd, digits = 6)
-                        smd  <- MD1 / md2; tsmd <- md3 / md2
+                        smd <- MD1 / md2; tsmd <- md3 / md2
                         MD2 <- round(floor(smd) - smd, digits = 6)
                         md3 <- round(floor(tsmd) - tsmd, digits = 6)
                         tmd <- MD2 / md3
                         MD3 <- round(floor(tmd) - tmd, digits = 6)
-                        re  <- cbind.data.frame(mz, MD1, MD2, MD3)
-                } else {
+                        re <- cbind.data.frame(mz, MD1, MD2, MD3)
+                } else{
                         MD1 <- round(ceiling(omd) - omd, digits = 6)
                         md2 <- round(ceiling(sumd) - sumd, digits = 6)
                         md3 <- round(ceiling(tumd) - tumd, digits = 6)
-                        smd  <- MD1 / md2; tsmd <- md3 / md2
+                        smd <- MD1 / md2; tsmd <- md3 / md2
                         MD2 <- round(ceiling(smd) - smd, digits = 6)
                         md3 <- round(ceiling(tsmd) - tsmd, digits = 6)
                         tmd <- MD2 / md3
                         MD3 <- round(ceiling(tmd) - tmd, digits = 6)
-                        re  <- cbind.data.frame(mz, MD1, MD2, MD3)
+                        re <- cbind.data.frame(mz, MD1, MD2, MD3)
                 }
-                
-        } else {
-                # single MD base
+        } else{
                 if (method == 'round') {
                         omd <- mz * round(cus) / cus
                         MD1 <- round(round(omd) - omd, digits = 6)
-                        re  <- cbind.data.frame(mz, MD1)
+                        re <- cbind.data.frame(mz, MD1)
                 } else if (method == 'floor') {
                         omd <- mz * floor(cus) / cus
                         MD1 <- round(floor(omd) - omd, digits = 6)
-                        re  <- cbind.data.frame(mz, MD1)
-                } else {
+                        re <- cbind.data.frame(mz, MD1)
+                } else{
                         omd <- mz * ceiling(cus) / cus
                         MD1 <- round(ceiling(omd) - omd, digits = 6)
-                        re  <- cbind.data.frame(mz, MD1)
+                        re <- cbind.data.frame(mz, MD1)
                 }
         }
         return(re)
@@ -130,16 +123,16 @@ getmdh <- function(mz, cus = c("CH2,H2"), method = "round") {
 getmass <- function(data) {
         if (grepl('-', data)) {
                 name <- unlist(strsplit(data, '-'))
-                iso1 <- as.double(enviPat::isopattern(chemforms = name[1], isotopes = isotopes)[[1]][[1, 1]])
-                iso2 <- as.double(enviPat::isopattern(chemforms = name[2], isotopes = isotopes)[[1]][[1, 1]])
-                cus  <- iso1 - iso2
+                iso1 <- as.double(enviPat::isopattern(chemforms = name[1], isotopes = isotopes)[[1]][[1,1]])
+                iso2 <- as.double(enviPat::isopattern(chemforms = name[2], isotopes = isotopes)[[1]][[1,1]])
+                cus <- iso1 - iso2
         } else if (grepl("/", data)) {
                 name <- unlist(strsplit(data, "/"))
                 frac <- as.double(name[2])
-                iso  <- as.double(enviPat::isopattern(chemforms = name[1], isotopes = isotopes)[[1]][[1, 1]])
-                cus  <- iso / frac
-        } else {
-                cus <- as.double(enviPat::isopattern(chemforms = data, isotopes = isotopes)[[1]][[1, 1]])
+                iso <- as.double(enviPat::isopattern(chemforms = name[1], isotopes = isotopes)[[1]][[1,1]])
+                cus <- iso / frac
+        } else{
+                cus <- as.double(enviPat::isopattern(chemforms = data, isotopes = isotopes)[[1]][[1,1]])
         }
         return(cus)
 }
@@ -163,7 +156,7 @@ get_ls_unit <- function(unit, ppm = 5, abs_floor = 0.006) {
         }
         
         tol_ppm <- mass_val * ppm * 1e-6
-        band    <- max(tol_ppm, abs_floor)
+        band <- max(tol_ppm, abs_floor)
         
         list(
                 unit     = unit,
@@ -174,10 +167,9 @@ get_ls_unit <- function(unit, ppm = 5, abs_floor = 0.006) {
 }
 
 # ---------------------------------------------------------
-# build_edges(): RT-based edges with optional RT tolerance
+# Optimized build_edges(): vectorized, fast, robust
 # ---------------------------------------------------------
-build_edges <- function(indexes, mz, ls_unit, ppm, rttol, trend, rt,
-                        allow_gaps = FALSE) {
+build_edges <- function(indexes, mz, ls_unit, ppm, rttol, trend, rt, allow_gaps = FALSE) {
         dm0 <- ls_unit$mass
         if (!is.finite(dm0))
                 return(data.frame(from = integer(0), to = integer(0)))
@@ -216,17 +208,14 @@ build_edges <- function(indexes, mz, ls_unit, ppm, rttol, trend, rt,
                 if (total_edges == 0) next
                 
                 from_vec <- rep.int(i_use, len_each)
-                to_vec   <- unlist(Map(function(a, b) seq.int(a + 1L, b), L_use, R_use),
-                                   use.names = FALSE)
+                to_vec   <- unlist(Map(function(a,b) seq.int(a+1L, b), L_use, R_use), use.names = FALSE)
                 
-                # RT tolerance
                 if (rttol > 0) {
-                        good_rt  <- abs(rt[to_vec] - rt[from_vec]) <= rttol
+                        good_rt <- abs(rt[to_vec] - rt[from_vec]) <= rttol
                         from_vec <- from_vec[good_rt]
                         to_vec   <- to_vec[good_rt]
                 }
                 
-                # RT trend (increasing/decreasing/any)
                 if (!is.null(trend)) {
                         if (trend == "increasing") {
                                 good <- rt[to_vec] >= (rt[from_vec] - 1e-12)
@@ -300,10 +289,7 @@ apply_shiny_splines <- function(df, R2_min = 0.98, spar = 0.45) {
         for (sid in sids) {
                 idx <- which(df$series_id == sid)
                 if (length(idx) < 3) next
-                fit <- try(
-                        suppressWarnings(stats::smooth.spline(df$mz[idx], df$rt[idx], spar = spar)),
-                        silent = TRUE
-                )
+                fit <- try(suppressWarnings(stats::smooth.spline(df$mz[idx], df$rt[idx], spar = spar)), silent = TRUE)
                 if (!inherits(fit, "try-error")) {
                         yhat <- stats::predict(fit, df$mz[idx])$y
                         R2   <- suppressWarnings(stats::cor(df$rt[idx], yhat)^2)
@@ -315,28 +301,21 @@ apply_shiny_splines <- function(df, R2_min = 0.98, spar = 0.45) {
 }
 
 # ---------------------------------------------------------
-# STRICT TREND FILTER (RT and/or CCS)
-# Drops ONLY the nodes that violate chosen monotonic trend
-# and, for CCS, optional per-step tolerance.
+# STRICT TREND FILTER (RT + optional CCS)
+# Drops ONLY the nodes that violate monotonic trend
 # ---------------------------------------------------------
-strict_rt_filter <- function(df, trend = NULL,
-                             ccs_mode = "rt",
-                             ccs_tol  = 0) {
+strict_rt_filter <- function(df, trend = NULL) {
+        # trend: "increasing", "decreasing", "any" or NULL
+        if (is.null(trend) || trend == "any") return(df)
         
-        if (is.null(trend) || trend == "any")
-                return(df)
-        
+        # We always use RT if present; CCS is optional and enforced *in addition*
         has_rt  <- "rt"  %in% names(df)
         has_ccs <- "ccs" %in% names(df)
         
-        # Which dimensions to enforce?
-        use_rt  <- ccs_mode %in% c("rt", "both")
-        use_ccs <- ccs_mode %in% c("ccs", "both")
-        
-        if (!has_rt)  use_rt  <- FALSE
-        if (!has_ccs) use_ccs <- FALSE
-        
-        if (!use_rt && !use_ccs) return(df)
+        if (!has_rt && !has_ccs) {
+                # Nothing to check against
+                return(df)
+        }
         
         sids <- unique(na.omit(df$series_id))
         if (!length(sids)) return(df)
@@ -344,37 +323,38 @@ strict_rt_filter <- function(df, trend = NULL,
         for (sid in sids) {
                 idx  <- which(df$series_id == sid)
                 comp <- df[idx, ]
-                comp <- comp[order(comp$mz), ]
+                comp <- comp[order(comp$mz), ]  # ensure sorted by m/z
                 
                 bad_pos <- integer(0)
                 
-                # --- RT monotonicity ---
-                if (use_rt) {
+                ## --- RT monotonicity ---
+                if (has_rt) {
                         d_rt <- diff(comp$rt)
-                        bad_rt <- if (trend == "increasing") {
-                                which(d_rt < 0)
+                        if (trend == "increasing") {
+                                bad_rt <- which(d_rt < 0)
                         } else if (trend == "decreasing") {
-                                which(d_rt > 0)
-                        } else integer(0)
-                        if (length(bad_rt)) bad_pos <- c(bad_pos, bad_rt + 1L)
+                                bad_rt <- which(d_rt > 0)
+                        } else {
+                                bad_rt <- integer(0)
+                        }
+                        if (length(bad_rt)) {
+                                bad_pos <- c(bad_pos, bad_rt + 1L)  # drop the later point
+                        }
                 }
                 
-                # --- CCS monotonicity + tolerance ---
-                if (use_ccs) {
+                ## --- CCS monotonicity (if present) ---
+                if (has_ccs) {
                         d_ccs <- diff(comp$ccs)
-                        
-                        bad_ccs <- if (trend == "increasing") {
-                                which(d_ccs < 0)
+                        if (trend == "increasing") {
+                                bad_ccs <- which(d_ccs < 0)
                         } else if (trend == "decreasing") {
-                                which(d_ccs > 0)
-                        } else integer(0)
-                        
-                        if (ccs_tol > 0) {
-                                bad_tol <- which(abs(d_ccs) > ccs_tol)
-                                bad_ccs <- unique(c(bad_ccs, bad_tol))
+                                bad_ccs <- which(d_ccs > 0)
+                        } else {
+                                bad_ccs <- integer(0)
                         }
-                        
-                        if (length(bad_ccs)) bad_pos <- c(bad_pos, bad_ccs + 1L)
+                        if (length(bad_ccs)) {
+                                bad_pos <- c(bad_pos, bad_ccs + 1L)
+                        }
                 }
                 
                 bad_pos <- unique(bad_pos)
@@ -386,6 +366,7 @@ strict_rt_filter <- function(df, trend = NULL,
         
         df
 }
+
 
 ###########  Built-in Homologue series finder  ###########
 
@@ -401,11 +382,9 @@ find_homologues <- function(
                 rt_trend = NULL,
                 R2_min = 0.98,
                 ncores = 20,
-                verbose = FALSE,
-                ccs_mode = "ccs",  # "rt", "ccs", or "both"
-                ccs_tol  = 0      # per-step CCS tolerance
+                verbose = FALSE
 ) {
-        # Map rt_trend -> internal 'trend'
+        # Allow UI to pass rt_trend; map it to internal 'trend'
         if (!is.null(rt_trend)) {
                 trend <- rt_trend
                 if (trend == "none") trend <- NULL
@@ -415,6 +394,7 @@ find_homologues <- function(
         df <- df[order(df$mz), ]
         rownames(df) <- NULL
         
+        # Keep original for case where no series found
         df_orig <- df
         
         ls_unit   <- get_ls_unit(unit, ppm = ppm)
@@ -425,25 +405,21 @@ find_homologues <- function(
         
         if (verbose) message("Building edges ...")
         edges <- build_edges(
-                indexes   = indexes,
-                mz        = mz_sorted,
-                ls_unit   = ls_unit,
-                ppm       = ppm,
-                rttol     = rttol,
-                trend     = trend,
-                rt        = df$rt,
+                indexes  = indexes,
+                mz       = mz_sorted,
+                ls_unit  = ls_unit,
+                ppm      = ppm,
+                rttol    = rttol,
+                trend    = trend,
+                rt       = df$rt,          # still RT-based edge construction
                 allow_gaps = allow_gaps
         )
         
         if (verbose) {
-                message(sprintf(
-                        "Peaks: %d | Candidate edges: %d",
-                        length(mz_sorted), nrow(edges)
-                ))
-                message(sprintf(
-                        "Unit: %s | dm0=%.6f | dm_min=%.6f | dm_max=%.6f",
-                        unit, ls_unit$mass, ls_unit$mz_lower, ls_unit$mz_upper
-                ))
+                message(sprintf("Peaks: %d | Candidate edges: %d",
+                                length(mz_sorted), nrow(edges)))
+                message(sprintf("Unit: %s | dm0=%.6f | dm_min=%.6f | dm_max=%.6f",
+                                unit, ls_unit$mass, ls_unit$mz_lower, ls_unit$mz_upper))
         }
         
         if (verbose) message("Constructing graph ...")
@@ -478,15 +454,16 @@ find_homologues <- function(
                 return(out)
         }
         
+        # Assign series IDs back to sorted df
         df$series_id <- nodes_with_series$series_id[
                 match(seq_len(nrow(df)), as.numeric(nodes_with_series$index))
         ]
+        
+        # helper index used by strict_rt_filter()
         df$series_id.index <- seq_len(nrow(df))
         
-        # Apply strict trend filter (RT and/or CCS)
-        df <- strict_rt_filter(df, trend,
-                               ccs_mode = ccs_mode,
-                               ccs_tol  = ccs_tol)
+        # --- NEW: Enforce monotonicity in RT and (if present) CCS ---
+        df <- strict_rt_filter(df, trend)
         
         # Keep only sufficiently long series
         counts   <- table(df$series_id)
@@ -500,15 +477,16 @@ find_homologues <- function(
                 return(out)
         }
         
-        # Optional RT spline smoothness filter
+        # Optional spline smoothness (still in RT)
         if (!is.null(trend) && !is.null(R2_min)) {
                 df <- apply_shiny_splines(df, R2_min = R2_min)
         }
         
-        # Normalize series IDs
+        # Normalise series IDs (1,2,3,...) after filtering
         df$series_id <- as.numeric(factor(df$series_id))
         df <- df[!is.na(df$series_id), , drop = FALSE]
         df$series_id <- as.numeric(factor(df$series_id))
         
         df
 }
+
