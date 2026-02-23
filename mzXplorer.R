@@ -131,7 +131,6 @@ ui <- shiny::navbarPage(
         shiny::tabPanel(
                 "Instructions",
                 shiny::fluidPage(
-                        shiny::titlePanel("How to use mzXplorer"),
                         shiny::br(),
                         shiny::includeMarkdown("./instructions.md")
                 )
@@ -175,6 +174,9 @@ server <- function(input, output, session) {
                 if (!"rt" %in% names(df) && "retention-time" %in% names(df)) df$rt <- df[["retention-time"]]
                 
                 stopifnot(all(c("mz","intensity","rt") %in% names(df)))
+                
+                # Stable ID per row to allow unambiguous joins (even if mz/rt duplicated)
+                df$id <- seq_len(nrow(df))
                 
                 df$RMD <- round((round(df$mz) - df$mz) / df$mz * 1e6)
                 df$OMD <- round((round(df$mz) - df$mz) * 1e3)
@@ -458,259 +460,284 @@ server <- function(input, output, session) {
         })
         
         # -----------------
-        # Main action
+        # Main action with progress bar
         # -----------------
         observeEvent(input$go, {
-                m <- MD_data()
-                m <- m[
-                        m$intensity >= input$slide1[1] &
-                                m$intensity <= input$slide1[2] &
-                                m$mz        >= input$slide2[1] &
-                                m$mz        <= input$slide2[2] &
-                                m$rt        >= input$slide3[1] &
-                                m$rt        <= input$slide3[2],
-                ]
-                
-                m_full <- m
-                
-                if (isTRUE(input$run_homol)) {
+                withProgress(message = "Running mzXplorer analysis...", value = 0, {
                         
-                        # safe CCS mode/tol
-                        ccs_mode <- if (!has_ccs() || !isTRUE(input$use_ccs_toggle)) {
-                                "rt"
-                        } else {
-                                if (is.null(input$ccs_mode)) "rt" else input$ccs_mode
-                        }
+                        # 1) Filter data
+                        incProgress(0.1, detail = "Filtering data...")
+                        m <- MD_data()
+                        m <- m[
+                                m$intensity >= input$slide1[1] &
+                                        m$intensity <= input$slide1[2] &
+                                        m$mz        >= input$slide2[1] &
+                                        m$mz        <= input$slide2[2] &
+                                        m$rt        >= input$slide3[1] &
+                                        m$rt        <= input$slide3[2],
+                        ]
                         
-                        ccs_tol <- if (!has_ccs() || !isTRUE(input$use_ccs_toggle)) {
-                                0
-                        } else {
-                                val <- input$homol_ccstol
-                                if (is.null(val) || is.na(val)) 0 else val
-                        }
+                        m_full <- m
                         
-                        m_homol <- find_homologues(
-                                df         = m,
-                                unit       = input$homol_unit,
-                                ppm        = input$homol_ppm,
-                                min_length = input$homol_minlen,
-                                rttol      = input$homol_rttol,
-                                rt_trend   = input$homol_rttrend,
-                                allow_gaps = input$homol_allow_gaps,
-                                R2_min     = input$homol_R2,
-                                ccs_mode   = ccs_mode,
-                                ccs_tol    = ccs_tol
-                        )
-                        
-                        m <- dplyr::left_join(
-                                m_full,
-                                m_homol[, c("mz", "rt", "series_id")],
-                                by = c("mz", "rt")
-                        )
-                } else {
-                        m <- m_full
-                        m$series_id <- NA_integer_
-                }
-                
-                # keys for crosstalk
-                m$.key <- sprintf("id%05d", seq_len(nrow(m)))
-                
-                # SharedData
-                d <- crosstalk::SharedData$new(m, key = ~.key, group = "md")
-                
-                vals$m <- m
-                vals$d <- d
-                vals$series_keys <- NULL
-                vals$series_sel  <- NULL
-                vals$series_cols <- NULL
-                
-                # Plots
-                output$DTPlot1 <- plotly::renderPlotly({
-                        req(vals$d)
-                        make_mdplot(
-                                shared_data       = vals$d,
-                                xvar              = input$xvar1,
-                                yvar              = input$yvar1,
-                                xlabel            = input$xvar1,
-                                ylabel            = input$yvar1,
-                                intensity_enabled = input$ins,
-                                intensity_col     = input$selectintensity,
-                                series_sel        = vals$series_sel,
-                                series_cols       = vals$series_cols,
-                                show_legend       = input$show_leg,
-                                source_id         = "plot1"
-                        )
-                })
-                
-                output$DTPlot2 <- plotly::renderPlotly({
-                        req(vals$d)
-                        make_mdplot(
-                                shared_data       = vals$d,
-                                xvar              = input$xvar2,
-                                yvar              = input$yvar2,
-                                xlabel            = input$xvar2,
-                                ylabel            = input$yvar2,
-                                intensity_enabled = input$ins,
-                                intensity_col     = input$selectintensity,
-                                series_sel        = vals$series_sel,
-                                series_cols       = vals$series_cols,
-                                show_legend       = input$show_leg,
-                                source_id         = "plot2"
-                        )
-                })
-                
-                # Selected-data table
-                output$table_selected <- DT::renderDT({
-                        req(vals$m)
-                        m <- vals$m
-                        sel_keys <- selected_keys()
-                        
-                        sel_df <- if (length(sel_keys)) {
-                                m[m$.key %in% sel_keys, , drop = FALSE]
-                        } else {
-                                m
-                        }
-                        
-                        DT::datatable(
-                                sel_df,
-                                editable  = TRUE,
-                                rownames  = FALSE,
-                                selection = "none",
-                                filter    = "top",
-                                options   = list(scrollX = TRUE)
-                        )
-                })
-                
-                # Barplot
-                nperc <- function(x) {
-                        if (length(x) == 0 || all(is.na(x))) return(numeric())
-                        round(x / max(x, na.rm = TRUE) * 100, 1)
-                }
-                
-                output$barplot <- plotly::renderPlotly({
-                        req(vals$m)
-                        m <- vals$m
-                        sel_keys <- selected_keys()
-                        
-                        bar_out <- if (length(sel_keys)) {
-                                m[m$.key %in% sel_keys, , drop = FALSE]
-                        } else {
-                                m[0, , drop = FALSE]
-                        }
-                        
-                        if (!nrow(bar_out)) return(NULL)
-                        
-                        selvar    <- input$selectintensity
-                        selectInt <- bar_out[[selvar]]
-                        ytitle    <- paste("Relative", selvar, "(%)")
-                        
-                        plotly::plot_ly() %>%
-                                plotly::add_trace(
-                                        data = bar_out,
-                                        x    = ~mz,
-                                        y    = ~nperc(selectInt),
-                                        type = "bar"
-                                ) %>%
-                                plotly::layout(
-                                        xaxis = list(title = "m/z"),
-                                        yaxis = list(title = ytitle)
+                        # 2) Homologue detection (if enabled)
+                        if (isTRUE(input$run_homol)) {
+                                incProgress(0.25, detail = "Detecting homologous series...")
+                                
+                                # safe CCS mode/tol
+                                ccs_mode <- if (!has_ccs() || !isTRUE(input$use_ccs_toggle)) {
+                                        "rt"
+                                } else {
+                                        if (is.null(input$ccs_mode)) "rt" else input$ccs_mode
+                                }
+                                
+                                ccs_tol <- if (!has_ccs() || !isTRUE(input$use_ccs_toggle)) {
+                                        0
+                                } else {
+                                        val <- input$homol_ccstol
+                                        if (is.null(val) || is.na(val)) 0 else val
+                                }
+                                
+                                m_homol <- find_homologues(
+                                        df         = m,
+                                        unit       = input$homol_unit,
+                                        ppm        = input$homol_ppm,
+                                        rttol      = input$homol_rttol,
+                                        allow_gaps = input$homol_allow_gaps,
+                                        min_length = input$homol_minlen,
+                                        rt_trend   = input$homol_rttrend,
+                                        R2_min     = input$homol_R2,
+                                        verbose    = FALSE,
+                                        ccs_mode   = ccs_mode,
+                                        ccs_tol    = ccs_tol
                                 )
-                })
-                
-                # Export with same selection logic
-                output$x3 <- downloadHandler(
-                        'MDplot_annotated_export.csv',
-                        content = function(file) {
+                                
+                                # Robust join via stable 'id' (avoids ambiguity for duplicate mz/rt)
+                                if (!"id" %in% names(m_homol)) {
+                                        stop("find_homologues must return an 'id' column for joining.")
+                                }
+                                
+                                m <- dplyr::left_join(
+                                        m_full,
+                                        m_homol[, c("id", "series_id")],
+                                        by = "id"
+                                )
+                        } else {
+                                m <- m_full
+                                m$series_id <- NA_integer_
+                        }
+                        
+                        incProgress(0.2, detail = "Preparing shared data and plots...")
+                        
+                        # keys for crosstalk
+                        m$.key <- sprintf("id%05d", seq_len(nrow(m)))
+                        
+                        # SharedData
+                        d <- crosstalk::SharedData$new(m, key = ~.key, group = "md")
+                        
+                        vals$m <- m
+                        vals$d <- d
+                        vals$series_keys <- NULL
+                        vals$series_sel  <- NULL
+                        vals$series_cols <- NULL
+                        
+                        # 3) Plots
+                        incProgress(0.15, detail = "Rendering plots...")
+                        
+                        output$DTPlot1 <- plotly::renderPlotly({
+                                req(vals$d)
+                                make_mdplot(
+                                        shared_data       = vals$d,
+                                        xvar              = input$xvar1,
+                                        yvar              = input$yvar1,
+                                        xlabel            = input$xvar1,
+                                        ylabel            = input$yvar1,
+                                        intensity_enabled = input$ins,
+                                        intensity_col     = input$selectintensity,
+                                        series_sel        = vals$series_sel,
+                                        series_cols       = vals$series_cols,
+                                        show_legend       = input$show_leg,
+                                        source_id         = "plot1"
+                                )
+                        })
+                        
+                        output$DTPlot2 <- plotly::renderPlotly({
+                                req(vals$d)
+                                make_mdplot(
+                                        shared_data       = vals$d,
+                                        xvar              = input$xvar2,
+                                        yvar              = input$yvar2,
+                                        xlabel            = input$xvar2,
+                                        ylabel            = input$yvar2,
+                                        intensity_enabled = input$ins,
+                                        intensity_col     = input$selectintensity,
+                                        series_sel        = vals$series_sel,
+                                        series_cols       = vals$series_cols,
+                                        show_legend       = input$show_leg,
+                                        source_id         = "plot2"
+                                )
+                        })
+                        
+                        # 4) Selected-data table
+                        incProgress(0.15, detail = "Rendering tables...")
+                        
+                        output$table_selected <- DT::renderDT({
                                 req(vals$m)
-                                m   <- vals$m
-                                sel <- selected_keys()
-                                out <- if (length(sel)) {
-                                        m[m$.key %in% sel, , drop = FALSE]
-                                } else m
-                                write.csv(out, file, row.names = FALSE)
-                        }
-                )
-                
-                # Homologue summary table with optional CCS summaries
-                output$homol_table <- DT::renderDT({
-                        req(isTRUE(input$run_homol))
-                        req("series_id" %in% names(m))
-                        ms <- m[!is.na(m$series_id), , drop = FALSE]
-                        if (!nrow(ms)) return(NULL)
-                        
-                        base_summ <- ms %>%
-                                dplyr::group_by(series_id) %>%
-                                dplyr::summarise(
-                                        n       = dplyr::n(),
-                                        mz_min  = min(mz, na.rm = TRUE),
-                                        mz_max  = max(mz, na.rm = TRUE),
-                                        rt_min  = min(rt, na.rm = TRUE),
-                                        rt_max  = max(rt, na.rm = TRUE),
-                                        int_sum = sum(intensity, na.rm = TRUE),
-                                        .groups = "drop"
+                                m <- vals$m
+                                sel_keys <- selected_keys()
+                                
+                                sel_df <- if (length(sel_keys)) {
+                                        m[m$.key %in% sel_keys, , drop = FALSE]
+                                } else {
+                                        m
+                                }
+                                
+                                DT::datatable(
+                                        sel_df,
+                                        editable  = TRUE,
+                                        rownames  = FALSE,
+                                        selection = "none",
+                                        filter    = "top",
+                                        options   = list(scrollX = TRUE)
                                 )
+                        })
                         
-                        if ("ccs" %in% names(ms)) {
-                                ccs_summ <- ms %>%
+                        # Barplot helper
+                        nperc <- function(x) {
+                                if (length(x) == 0 || all(is.na(x))) return(numeric())
+                                round(x / max(x, na.rm = TRUE) * 100, 1)
+                        }
+                        
+                        output$barplot <- plotly::renderPlotly({
+                                req(vals$m)
+                                m <- vals$m
+                                sel_keys <- selected_keys()
+                                
+                                bar_out <- if (length(sel_keys)) {
+                                        m[m$.key %in% sel_keys, , drop = FALSE]
+                                } else {
+                                        m[0, , drop = FALSE]
+                                }
+                                
+                                if (!nrow(bar_out)) return(NULL)
+                                
+                                selvar    <- input$selectintensity
+                                selectInt <- bar_out[[selvar]]
+                                ytitle    <- paste("Relative", selvar, "(%)")
+                                
+                                plotly::plot_ly() %>%
+                                        plotly::add_trace(
+                                                data = bar_out,
+                                                x    = ~mz,
+                                                y    = ~nperc(selectInt),
+                                                type = "bar"
+                                        ) %>%
+                                        plotly::layout(
+                                                xaxis = list(title = "m/z"),
+                                                yaxis = list(title = ytitle)
+                                        )
+                        })
+                        
+                        # 5) Export handler
+                        incProgress(0.05, detail = "Setting up export...")
+                        
+                        output$x3 <- downloadHandler(
+                                'MDplot_annotated_export.csv',
+                                content = function(file) {
+                                        req(vals$m)
+                                        m   <- vals$m
+                                        sel <- selected_keys()
+                                        out <- if (length(sel)) {
+                                                m[m$.key %in% sel, , drop = FALSE]
+                                        } else m
+                                        write.csv(out, file, row.names = FALSE)
+                                }
+                        )
+                        
+                        # 6) Homologue summary table with optional CCS summaries
+                        incProgress(0.1, detail = "Summarising homologue series...")
+                        
+                        output$homol_table <- DT::renderDT({
+                                req(isTRUE(input$run_homol))
+                                req("series_id" %in% names(m))
+                                ms <- m[!is.na(m$series_id), , drop = FALSE]
+                                if (!nrow(ms)) return(NULL)
+                                
+                                base_summ <- ms %>%
                                         dplyr::group_by(series_id) %>%
                                         dplyr::summarise(
-                                                ccs_min   = min(ccs, na.rm = TRUE),
-                                                ccs_max   = max(ccs, na.rm = TRUE),
-                                                ccs_range = round(ccs_max - ccs_min, 5),
-                                                .groups   = "drop"
+                                                n       = dplyr::n(),
+                                                mz_min  = min(mz, na.rm = TRUE),
+                                                mz_max  = max(mz, na.rm = TRUE),
+                                                rt_min  = min(rt, na.rm = TRUE),
+                                                rt_max  = max(rt, na.rm = TRUE),
+                                                int_sum = sum(intensity, na.rm = TRUE),
+                                                .groups = "drop"
                                         )
                                 
-                                summ <- dplyr::left_join(base_summ, ccs_summ, by = "series_id")
-                        } else {
-                                summ <- base_summ
-                        }
+                                if ("ccs" %in% names(ms)) {
+                                        ccs_summ <- ms %>%
+                                                dplyr::group_by(series_id) %>%
+                                                dplyr::summarise(
+                                                        ccs_min   = min(ccs, na.rm = TRUE),
+                                                        ccs_max   = max(ccs, na.rm = TRUE),
+                                                        ccs_range = round(ccs_max - ccs_min, 5),
+                                                        .groups   = "drop"
+                                                )
+                                        
+                                        summ <- dplyr::left_join(base_summ, ccs_summ, by = "series_id")
+                                } else {
+                                        summ <- base_summ
+                                }
+                                
+                                summ <- summ %>%
+                                        dplyr::arrange(dplyr::desc(n), mz_min)
+                                
+                                vals$summ <- summ
+                                
+                                DT::datatable(
+                                        summ,
+                                        rownames  = FALSE,
+                                        selection = "multiple",
+                                        options   = list(scrollX = TRUE, pageLength = 10)
+                                )
+                        })
                         
-                        summ <- summ %>%
-                                dplyr::arrange(dplyr::desc(n), mz_min)
+                        # Homologue table selection -> highlight & set priority keys
+                        observeEvent(input$homol_table_rows_selected, {
+                                req(vals$d, vals$m, vals$summ)
+                                sel_rows <- input$homol_table_rows_selected
+                                
+                                if (!length(sel_rows)) {
+                                        vals$d$selection(NULL)
+                                        vals$series_keys <- NULL
+                                        vals$series_sel  <- NULL
+                                        vals$series_cols <- NULL
+                                        return()
+                                }
+                                
+                                sel_series <- vals$summ$series_id[sel_rows]
+                                keys <- vals$m$.key[!is.na(vals$m$series_id) &
+                                                            vals$m$series_id %in% sel_series]
+                                cols <- series_palette(length(sel_series))
+                                names(cols) <- as.character(sel_series)
+                                
+                                vals$series_keys <- keys
+                                vals$series_sel  <- sel_series
+                                vals$series_cols <- cols
+                                
+                                vals$d$selection(keys)   # for plot highlighting
+                        }, ignoreInit = TRUE)
                         
-                        vals$summ <- summ
-                        
-                        DT::datatable(
-                                summ,
-                                rownames  = FALSE,
-                                selection = "multiple",
-                                options   = list(scrollX = TRUE, pageLength = 10)
-                        )
-                })
-                
-                # Homologue table selection -> highlight & set priority keys
-                observeEvent(input$homol_table_rows_selected, {
-                        req(vals$d, vals$m, vals$summ)
-                        sel_rows <- input$homol_table_rows_selected
-                        
-                        if (!length(sel_rows)) {
+                        # Clear selection
+                        observeEvent(input$clear_homol_sel, {
+                                req(vals$d)
                                 vals$d$selection(NULL)
                                 vals$series_keys <- NULL
                                 vals$series_sel  <- NULL
                                 vals$series_cols <- NULL
-                                return()
-                        }
+                        })
                         
-                        sel_series <- vals$summ$series_id[sel_rows]
-                        keys <- vals$m$.key[!is.na(vals$m$series_id) &
-                                                    vals$m$series_id %in% sel_series]
-                        cols <- series_palette(length(sel_series))
-                        names(cols) <- as.character(sel_series)
-                        
-                        vals$series_keys <- keys
-                        vals$series_sel  <- sel_series
-                        vals$series_cols <- cols
-                        
-                        vals$d$selection(keys)   # for plot highlighting
-                }, ignoreInit = TRUE)
-                
-                # Clear selection
-                observeEvent(input$clear_homol_sel, {
-                        req(vals$d)
-                        vals$d$selection(NULL)
-                        vals$series_keys <- NULL
-                        vals$series_sel  <- NULL
-                        vals$series_cols <- NULL
+                        incProgress(0.1, detail = "Done.")
                 })
         })
         
