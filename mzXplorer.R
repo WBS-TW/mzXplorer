@@ -100,7 +100,7 @@ ui <- shiny::navbarPage(
                                         shiny::uiOutput("slide1"),
                                         shiny::uiOutput("slide2"),
                                         shiny::uiOutput("slide3"),
-                                        width = 3
+                                        width = 2
                                 ),
                                 
                                 shiny::mainPanel(
@@ -122,7 +122,8 @@ ui <- shiny::navbarPage(
                                         ),
                                         
                                         shiny::tags$br(),
-                                        DT::DTOutput("homol_table")
+                                        DT::DTOutput("homol_table"),
+                                        width = 10
                                 )
                         )
                 )

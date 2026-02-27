@@ -149,7 +149,7 @@ The export includes all MD variables, homologue IDs, and CCS values if present.
 
 ------------------------------------------------------------------------
 
-# 6. Homologue‑Series Detection (Updated)
+# 6. Homologue‑Series Detection
 
 Enable detection via:
 
@@ -161,8 +161,8 @@ mzXplorer implements a graph‑based homologue finder with **RT** and **CCS** mo
 
 | Parameter        | Description                   |
 |------------------|-------------------------------|
-| Repeating unit   | formula or exact mass         |
-| ppm tolerance    | mass spacing error            |
+| Repeating unit   | formula (e.g. CH2 or CF2)     |
+| ppm tolerance    | mass error in ppm             |
 | Minimum length   | after filtering               |
 | RT tolerance     | max jump per step             |
 | RT trend         | increasing / decreasing / any |

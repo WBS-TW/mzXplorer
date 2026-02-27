@@ -1,0 +1,28 @@
+Package: mzXplorer
+Title: mzXplorer 
+Version: 0.2
+Authors@R: c(
+    person("Thanh", "Wang", "thanh.wang@liu.se", role = c("cre", "aut"),
+           comment = c(ORCID = "0000-0002-5729-1908")),
+    person("Miao", "Yu", "add@email", role = "cre", "aut"),
+    person("Victoria", "Eriksson", "victoria.eriksson@liu.se", role = c("aut"))
+  )
+Description: Interactive tools for mass defect and homologue series detection
+License: CC BY 4.0
+Depends: 
+    R (>= 4.0)
+Encoding: UTF-8
+LazyData: true
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.3.2
+Imports: 
+    shiny,
+    shinyjqui, 
+    lshinythemes,
+    DT,
+    dplyr,
+    plotly, 
+    crosstalk, 
+    enviPat, 
+    vroom, 
+    igraph

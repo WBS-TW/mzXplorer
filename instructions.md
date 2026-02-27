@@ -48,19 +48,19 @@ Names must follow standard R variable rules (letters, digits, `_`, `.`).
 
 mzXplorer supports up to **three mass‑defect bases**, entered as:
 
-| Input      | Meaning                 |
-|------------|-------------------------|
-| `CH2`      | CH₂ mass                |
-| `Cl-H`     | mass(Cl) − mass(H)      |
-| `CH2,O`    | first = CH₂, second = O |
-| `CH2,Cl-H` | CH₂ and (Cl−H)          |
-| `CH2/10`   | fractional mass         |
+| Input      | Meaning                      |
+|------------|------------------------------|
+| `CH2`      | CH₂ mass                     |
+| `Cl-H`     | replacement of H with Cl     |
+| `CH2,O`    | first = CH₂, second = O      |
+| `CH2,Cl-H` | CH₂ and (Cl−H)               |
+| `CH2/10`   | fractional mass with base 10 |
 
 After clicking **Plot**, mzXplorer computes:
 
 -   **OMD** – original mass defect\
 -   **RMD** – relative mass defect\
--   **MD1**, **MD2**, **MD3** – higher‑order projections
+-   **MD1 (MD2**, **MD3)** – user input mass defects
 
 All appear in axis selectors.
 
@@ -82,11 +82,6 @@ Any numeric column is selectable.
 ## 3.2 Intensity scaling
 
 Enabling **Show intensity as size** scales point size by the selected variable.
-
-This affects:
-
--   both plots\
--   barplot
 
 ## 3.3 Homologue colouring
 
@@ -159,18 +154,18 @@ mzXplorer implements a graph‑based homologue finder with **RT** and **CCS** mo
 
 ## 6.1 Parameters
 
-| Parameter        | Description                   |
-|------------------|-------------------------------|
-| Repeating unit   | formula or exact mass         |
-| ppm tolerance    | mass spacing error            |
-| Minimum length   | after filtering               |
-| RT tolerance     | max jump per step             |
-| RT trend         | increasing / decreasing / any |
-| Allow gaps       | allows k = 2 jumps            |
-| Spline R²        | RT smoothness filter          |
-| Enable CCS rules | activates CCS settings        |
-| CCS mode         | RT only / CCS only / Both     |
-| CCS tolerance    | max CCS jump per step         |
+| Parameter | Description |
+|----|----|
+| Repeating unit | formula (e.g. CH2 or CF2) |
+| ppm tolerance | mass error in ppm |
+| Minimum length | least number of homologues to be considered a series |
+| RT tolerance | max rt difference per step |
+| RT trend | increasing / decreasing / any |
+| Allow gaps | allows k = 2 jumps (allow skipping one repeating unit in the middle of a series) |
+| Spline R² | RT smoothness filter |
+| Enable CCS rules | activates CCS settings |
+| CCS mode | RT only / CCS only / Both |
+| CCS tolerance | max CCS difference per step |
 
 ------------------------------------------------------------------------
 
@@ -270,7 +265,7 @@ This ensures intuitive control:\
 Barplot shows:
 
 -   x = m/z\
--   y = relative intensity (% of max)
+-   y = relative (% of max) of selected variable
 
 Only selected points appear.
 
@@ -283,11 +278,7 @@ Updates when:
 
 # 12. Known Issues
 
--   Editing table values may break selection syncing.\
-    Prefer: Export → edit externally → re‑import.
-
--   Duplicate `(mz, rt)` pairs may produce ambiguous series IDs.\
-    Add a unique identifier if needed.
+-   To be added
 
 ------------------------------------------------------------------------
 
@@ -296,7 +287,7 @@ Updates when:
 -   LC/GC‑HRMS:
     -   RT trend = **increasing**\
     -   Enable **Both (RT + CCS)**\
-    -   Use spline R² \> 0.95
+    -   Use spline R² \> 0.95 for stricter monotonic trend
 -   IM‑MS:
     -   Activate CCS mode\
     -   Tune CCS tolerance

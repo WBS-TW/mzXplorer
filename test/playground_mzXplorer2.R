@@ -18,7 +18,7 @@ source("playground_utils2.R")
 ###########  UI  ###########
 
 ui <- shiny::navbarPage(
-        "mzXplorer: interactive mass defect plots",
+        "mzXplorer: interactive mass defect and homologue series analysis",
         theme = shinythemes::shinytheme('spacelab'),
         
         shiny::tabPanel(
@@ -100,7 +100,7 @@ ui <- shiny::navbarPage(
                                         shiny::uiOutput("slide1"),
                                         shiny::uiOutput("slide2"),
                                         shiny::uiOutput("slide3"),
-                                        width = 3
+                                        width = 2
                                 ),
                                 
                                 shiny::mainPanel(
@@ -122,7 +122,8 @@ ui <- shiny::navbarPage(
                                         ),
                                         
                                         shiny::tags$br(),
-                                        DT::DTOutput("homol_table")
+                                        DT::DTOutput("homol_table"),
+                                        width = 10
                                 )
                         )
                 )
@@ -131,7 +132,6 @@ ui <- shiny::navbarPage(
         shiny::tabPanel(
                 "Instructions",
                 shiny::fluidPage(
-                        shiny::titlePanel("How to use mzXplorer"),
                         shiny::br(),
                         shiny::includeMarkdown("./playground_instructions.md")
                 )
